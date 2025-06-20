@@ -1,6 +1,6 @@
 import streamlit as st
 import numpy as np
-from algorithm import simplex
+
 
 st.title("Simplex Yöntemi Çözücü")
 

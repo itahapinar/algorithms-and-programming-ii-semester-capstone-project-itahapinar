@@ -1,22 +1,25 @@
-
 import matplotlib.pyplot as plt
+import streamlit as st
 import numpy as np
 
-def plot_feasible_region(A, b, solution):
-    x = np.linspace(0, 10, 400)
-    plt.figure(figsize=(6, 6))
+def plot_feasible_region(A, b, c):
+    x = np.linspace(0, 20, 400)
+    plt.figure(figsize=(8, 6))
     
-    for i in range(len(A)):
-        y = (b[i] - A[i, 0]*x) / A[i, 1]
-        plt.plot(x, y, label=f"{A[i,0]}x + {A[i,1]}y <= {b[i]}")
-
-    plt.plot(solution[0], solution[1], 'ro', label='Optimal Point')
-    plt.xlim(0, 10)
-    plt.ylim(0, 10)
+    for i in range(A.shape[0]):
+        if A[i, 1] != 0:
+            y = (b[i] - A[i, 0] * x) / A[i, 1]
+            plt.plot(x, y, label=f"{A[i,0]}x + {A[i,1]}y <= {b[i]}")
+    
+    plt.xlim((0, 20))
+    plt.ylim((0, 20))
     plt.xlabel("x")
     plt.ylabel("y")
-    plt.grid(True)
     plt.title("Feasible Region")
+    plt.grid(True)
     plt.legend()
-    return plt
+    st.pyplot(plt.gcf())
 
+def display_tableau(tableau):
+    st.write("### Simplex Tableau")
+    st.dataframe(np.round(tableau, 3))

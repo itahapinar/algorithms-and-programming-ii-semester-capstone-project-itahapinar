@@ -1,40 +1,40 @@
-import streamlit as st
 import numpy as np
 
+def simplex(c, A, b):
+    m, n = A.shape
+    tableau = np.hstack([A, np.eye(m), b.reshape(-1, 1)])
+    cost = np.hstack([c, np.zeros(m + 1)])
+    tableau = np.vstack([tableau, cost])
 
-st.title("Simplex Yöntemi Çözücü")
+    basis = list(range(n, n + m))
 
-st.subheader("Amaç Fonksiyonu (örnek: 3, 5):")
-objective_input = st.text_input("z = ", "3, 5")
+    while True:
+        pivot_col = np.argmin(tableau[-1, :-1])
+        if tableau[-1, pivot_col] >= 0:
+            break
 
-st.subheader("Kısıtlar (örnek: 1, 2, 8):")
-num_constraints = st.number_input("Kaç adet kısıt girilecek?", min_value=1, step=1)
-constraints = []
+        ratios = []
+        for i in range(m):
+            if tableau[i, pivot_col] > 0:
+                ratios.append(tableau[i, -1] / tableau[i, pivot_col])
+            else:
+                ratios.append(np.inf)
 
-for i in range(num_constraints):
-    constraint = st.text_input(f"{i+1}. Kısıt (örnek: 1, 2, 8)", "")
-    constraints.append(constraint)
+        pivot_row = np.argmin(ratios)
+        if ratios[pivot_row] == np.inf:
+            raise Exception("Unbounded solution")
 
-if st.button("Çözümle"):
-    try:
-        c = np.array([float(x) for x in objective_input.split(",")])
+        pivot_element = tableau[pivot_row, pivot_col]
+        tableau[pivot_row] /= pivot_element
 
-        A = []
-        b = []
+        for i in range(m + 1):
+            if i != pivot_row:
+                tableau[i] -= tableau[i, pivot_col] * tableau[pivot_row]
 
-        for cons in constraints:
-            parts = cons.split(",")
-            A.append([float(x) for x in parts[:-1]])
-            b.append(float(parts[-1]))
+        basis[pivot_row] = pivot_col
 
-        A = np.array(A)
-        b = np.array(b)
+    solution = np.zeros(n + m)
+    for i in range(m):
+        solution[basis[i]] = tableau[i, -1]
 
-        solution, z_max, steps = simplex(c, A, b)
-
-        st.success("Optimal Çözüm:")
-        st.write("x =", solution)
-        st.write("Maksimum Z =", z_max)
-
-    except Exception as e:
-        st.error(f"Hata: {e}")
+    return solution[:n], tableau

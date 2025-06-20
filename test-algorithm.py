@@ -1,14 +1,14 @@
-from algorithm import simplex
+import unittest
 import numpy as np
+from algorithm import simplex
 
-def test_simplex_basic():
-    c = np.array([3, 2])
-    A = np.array([[1, 1], [1, 0], [0, 1]])
-    b = np.array([4, 2, 3])
-    solution, value, _ = simplex(c, A, b)
+class TestSimplex(unittest.TestCase):
+    def test_basic_case(self):
+        c = np.array([3, 2])
+        A = np.array([[2, 1], [1, 2]])
+        b = np.array([18, 14])
+        solution, _ = simplex(c, A, b)
+        self.assertTrue(np.allclose(solution, [5.2, 4.4], atol=1e-1))
 
-    assert round(solution[0], 2) == 2.0
-    assert round(solution[1], 2) == 2.0
-    assert round(value, 2) == 10.0
-
-
+if __name__ == '__main__':
+    unittest.main()

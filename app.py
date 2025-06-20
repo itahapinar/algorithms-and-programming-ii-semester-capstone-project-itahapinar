@@ -38,21 +38,59 @@ for i in range(num_constraints):
     A.append(row)
     b.append(cols[-1].number_input(f"b{i+1}", key=f"b{i}", value=10.0))
 
-A = np.array(A)
-b = np.array(b)
-c = np.array(c)
+A = np.array(A, dtype=float)
+b = np.array(b, dtype=float)
+c = np.array(c, dtype=float)
 
 # --- SOLUTION SECTION ---
 if st.button("🔍 Solve Linear Program"):
     try:
-        solution, z_value, tableau = simplex(c, A, b)
-        st.success(f"✅ Optimal solution found: x = {solution}, Max Value = {z_value:.2f}")
-        display_tableau(tableau)
-
-        if num_vars == 2:
-            plot_feasible_region(A, b, c)
+        # Validate inputs
+        if np.any(b < 0):
+            st.error("❌ Error: All constraint bounds (b values) must be non-negative")
+        elif A.size == 0 or c.size == 0:
+            st.error("❌ Error: Invalid problem dimensions")
         else:
-            st.warning("❗ Visualization only works for 2 variables.")
+            # Solve the problem
+            result = simplex(c, A, b)
+            
+            # Handle different return formats
+            if len(result) == 3:
+                solution, z_value, tableau = result
+            elif len(result) == 2:
+                solution, z_value = result
+                tableau = None
+            else:
+                st.error("❌ Error: Unexpected return format from simplex function")
+                st.stop()
+            
+            # Display results
+            st.success(f"✅ Optimal solution found!")
+            
+            # Format solution display
+            solution_text = ", ".join([f"x{i+1} = {solution[i]:.3f}" for i in range(len(solution))])
+            st.write(f"**Optimal Solution:** {solution_text}")
+            st.write(f"**Maximum Objective Value:** {z_value:.3f}")
+            
+            # Display tableau if available
+            if tableau is not None:
+                try:
+                    display_tableau(tableau)
+                except Exception as tableau_error:
+                    st.warning(f"⚠️ Could not display tableau: {tableau_error}")
+            
+            # Plot feasible region for 2D problems
+            if num_vars == 2:
+                try:
+                    plot_feasible_region(A, b, c)
+                except Exception as plot_error:
+                    st.warning(f"⚠️ Could not plot feasible region: {plot_error}")
+            else:
+                st.info("📊 Visualization is only available for 2-variable problems.")
 
     except Exception as e:
-        st.error(f"❌ Error: {e}")
+        st.error(f"❌ Error: {str(e)}")
+        st.info("💡 Common issues:")
+        st.info("- Check that all constraints are properly formatted")
+        st.info("- Ensure the problem is feasible")
+        st.info("- Verify that constraint bounds are non-negative")

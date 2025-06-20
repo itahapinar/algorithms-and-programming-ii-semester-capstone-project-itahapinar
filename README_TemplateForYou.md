@@ -27,7 +27,7 @@ This project is an interactive web application that implements and visualizes [L
 ### Pseudocode
 
 ```
-[1. Initialize simplex tableau.
+1. Initialize simplex tableau.
 2. While there is a negative value in the bottom row (objective row):
    a. Choose entering variable (most negative coefficient).
    b. Determine leaving variable using minimum ratio test.

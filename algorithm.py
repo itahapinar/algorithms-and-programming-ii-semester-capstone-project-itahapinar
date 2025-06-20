@@ -1,3 +1,5 @@
+import numpy as np
+
 def simplex(c, A, b):
     m, n = A.shape
     tableau = np.hstack([A, np.eye(m), b.reshape(-1, 1)])

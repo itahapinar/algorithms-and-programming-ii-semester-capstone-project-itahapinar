@@ -1,33 +1,40 @@
+import streamlit as st
 import numpy as np
+from algorithm import simplex
 
-def simplex(c, A, b):
-    m, n = A.shape
-    tableau = np.hstack([A, np.eye(m), b.reshape(-1, 1)])
-    cost_row = np.hstack([-c, np.zeros(m + 1)])
-    tableau = np.vstack([tableau, cost_row])
+st.title("Simplex Yöntemi Çözücü")
 
-    steps = []  # Pivot adımlarını tut
-    while any(tableau[-1, :-1] < 0):
-        pivot_col = np.argmin(tableau[-1, :-1])
-        ratios = tableau[:-1, -1] / tableau[:-1, pivot_col]
-        ratios[ratios < 0] = np.inf
-        pivot_row = np.argmin(ratios)
-        pivot = tableau[pivot_row, pivot_col]
-        tableau[pivot_row] /= pivot
+st.subheader("Amaç Fonksiyonu (örnek: 3, 5):")
+objective_input = st.text_input("z = ", "3, 5")
 
-        for i in range(len(tableau)):
-            if i != pivot_row:
-                tableau[i] -= tableau[i, pivot_col] * tableau[pivot_row]
+st.subheader("Kısıtlar (örnek: 1, 2, 8):")
+num_constraints = st.number_input("Kaç adet kısıt girilecek?", min_value=1, step=1)
+constraints = []
 
-        steps.append(tableau.copy())
+for i in range(num_constraints):
+    constraint = st.text_input(f"{i+1}. Kısıt (örnek: 1, 2, 8)", "")
+    constraints.append(constraint)
 
-    solution = np.zeros(n)
-    for i in range(n):
-        col = tableau[:, i]
-        if list(col).count(1) == 1 and list(col).count(0) == len(col) - 1:
-            row = list(col).index(1)
-            solution[i] = tableau[row, -1]
+if st.button("Çözümle"):
+    try:
+        c = np.array([float(x) for x in objective_input.split(",")])
 
-    return solution, tableau[-1, -1], steps
+        A = []
+        b = []
 
+        for cons in constraints:
+            parts = cons.split(",")
+            A.append([float(x) for x in parts[:-1]])
+            b.append(float(parts[-1]))
 
+        A = np.array(A)
+        b = np.array(b)
+
+        solution, z_max, steps = simplex(c, A, b)
+
+        st.success("Optimal Çözüm:")
+        st.write("x =", solution)
+        st.write("Maksimum Z =", z_max)
+
+    except Exception as e:
+        st.error(f"Hata: {e}")

@@ -1,3 +1,5 @@
+import matplotlib
+matplotlib.use('Agg')  # Use non-interactive backend
 import matplotlib.pyplot as plt
 import streamlit as st
 import numpy as np
@@ -12,7 +14,9 @@ def plot_feasible_region(A, b, c):
             st.error("Plotting is only available for 2-variable problems")
             return
             
-        fig, ax = plt.subplots(figsize=(10, 8))
+        # Create figure and axis safely
+        fig = plt.figure(figsize=(10, 8))
+        ax = fig.add_subplot(111)
         x = np.linspace(0, 25, 400)
         
         # Plot constraint lines

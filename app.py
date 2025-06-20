@@ -4,31 +4,55 @@ from algorithm import simplex
 from utils import plot_feasible_region, display_tableau
 
 st.set_page_config(page_title="Simplex Method Solver", layout="wide")
-
-st.title("🔢 Linear Programming - Simplex Method")
+st.title("🔢 Linear Programming - Simplex Method (Interactive)")
 
 st.markdown("""
-This application solves linear programming problems using the **Simplex Method**.
-Enter your coefficients below and visualize the solution process.
+This application solves **linear programming problems** using the **Simplex Method**.
+
+- ✅ Enter the number of variables and constraints
+- ✅ Define objective function and constraints
+- ✅ Watch the algorithm step through the solution
 """)
 
-with st.sidebar:
-    st.header("Problem Parameters")
-    c = st.text_input("Objective Function Coefficients (c)", "3,2")
-    A = st.text_area("Constraint Coefficients (A)", "2,1\n1,2")
-    b = st.text_input("Right-hand Side (b)", "18,14")
+# --- INPUT SECTION ---
 
-if st.button("Solve"):
+st.sidebar.header("Step 1: Define Problem Dimensions")
+num_vars = st.sidebar.number_input("Number of variables", min_value=2, max_value=5, value=2)
+num_constraints = st.sidebar.number_input("Number of constraints", min_value=1, max_value=5, value=2)
+
+st.header("Step 2: Enter Objective Function (Maximize)")
+c = []
+for i in range(num_vars):
+    c.append(st.number_input(f"Coefficient of x{i+1} in Objective Function", key=f"c{i}", value=1.0))
+
+st.header("Step 3: Enter Constraints (Ax ≤ b)")
+
+A = []
+b = []
+
+for i in range(num_constraints):
+    cols = st.columns(num_vars + 1)
+    row = []
+    for j in range(num_vars):
+        row.append(cols[j].number_input(f"a{i+1}{j+1}", key=f"A{i}{j}", value=1.0))
+    A.append(row)
+    b.append(cols[-1].number_input(f"b{i+1}", key=f"b{i}", value=10.0))
+
+A = np.array(A)
+b = np.array(b)
+c = np.array(c)
+
+# --- SOLUTION SECTION ---
+if st.button("🔍 Solve Linear Program"):
     try:
-        c = np.fromstring(c, sep=",")
-        A = np.array([[float(num) for num in row.split(",")] for row in A.strip().split("\n")])
-        b = np.fromstring(b, sep=",")
-
         solution, tableau = simplex(c, A, b)
-
-        st.success(f"✅ Optimal solution found: x = {solution}, Max value = {np.dot(c, solution)}")
+        st.success(f"✅ Optimal solution found: x = {solution}, Max Value = {np.dot(c, solution):.2f}")
         display_tableau(tableau)
-        plot_feasible_region(A, b, c)
+
+        if num_vars == 2:  # Only 2D problems are visualized
+            plot_feasible_region(A, b, c)
+        else:
+            st.warning("❗Visualization only works for 2 variables.")
 
     except Exception as e:
         st.error(f"❌ Error: {e}")

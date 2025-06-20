@@ -116,11 +116,14 @@ This project is an interactive web application that implements and visualizes [L
    Maximize Z = -3x₁ - 2x₂
 
    Constraints:
-   x₁ + x₂ ≤ 4 ,
-   2x₁ + x₂ ≤ 5
+   x₁ + x₂ ≤ 4  
+   2x₁ + x₂ ≤ 5  
+   x₁ ≥ 0  
+   x₂ ≥ 0
 
    Output:
-   x₁ = 1, x₂ = 3
+   x₁ = 1  
+   x₂ = 3  
    Max Z = -9]
 
 - [Objective Function:

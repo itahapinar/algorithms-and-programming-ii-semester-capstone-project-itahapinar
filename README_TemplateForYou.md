@@ -72,6 +72,7 @@ This project is an interactive web application that implements and visualizes [L
 
 - Python 3.8 or higher
 - Git
+- Streamlit Cloud
 
 ### Setup Instructions
 

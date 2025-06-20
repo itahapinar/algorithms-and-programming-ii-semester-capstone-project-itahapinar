@@ -3,7 +3,7 @@ import numpy as np
 def simplex(c, A, b):
     m, n = A.shape
     tableau = np.hstack([A, np.eye(m), b.reshape(-1, 1)])
-    cost = np.hstack([-c, np.zeros(m + 1)])  
+    cost = np.hstack([-c, np.zeros(m + 1)])
     tableau = np.vstack([tableau, cost])
 
     basis = list(range(n, n + m))
@@ -33,5 +33,5 @@ def simplex(c, A, b):
     for i in range(m):
         solution[basis[i]] = tableau[i, -1]
 
-    z_value = tableau[-1, -1] * -1
+    z_value = -tableau[-1, -1]
     return solution[:n], z_value, tableau

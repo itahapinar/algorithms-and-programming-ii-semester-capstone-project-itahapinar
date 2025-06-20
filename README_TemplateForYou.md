@@ -57,7 +57,7 @@ This project is an interactive web application that implements and visualizes [L
 ## Screenshots
 
 ![Main Interface](docs/screenshots/main_interface.png)
-*Caption describing the main interface*
+
 
 ![Algorithm in Action](docs/screenshots/algorithm_demo.png)
 *Caption describing the algorithm in action*

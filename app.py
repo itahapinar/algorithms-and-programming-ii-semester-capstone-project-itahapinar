@@ -9,9 +9,9 @@ st.title("🔢 Linear Programming - Simplex Method (Interactive)")
 st.markdown("""
 This application solves **linear programming problems** using the **Simplex Method**.
 
-- ✅ Enter the number of variables and constraints
-- ✅ Define objective function and constraints
-- ✅ Watch the algorithm step through the solution
+- ✅ Enter the number of variables and constraints  
+- ✅ Define objective function and constraints  
+- ✅ Watch the algorithm step through the solution  
 """)
 
 # --- INPUT SECTION ---
@@ -45,14 +45,14 @@ c = np.array(c)
 # --- SOLUTION SECTION ---
 if st.button("🔍 Solve Linear Program"):
     try:
-        solution, tableau = simplex(c, A, b)
-        st.success(f"✅ Optimal solution found: x = {solution}, Max Value = {np.dot(c, solution):.2f}")
+        solution, z_value, tableau = simplex(c, A, b)
+        st.success(f"✅ Optimal solution found: x = {solution}, Max Value = {z_value:.2f}")
         display_tableau(tableau)
 
-        if num_vars == 2:  # Only 2D problems are visualized
+        if num_vars == 2:
             plot_feasible_region(A, b, c)
         else:
-            st.warning("❗Visualization only works for 2 variables.")
+            st.warning("❗ Visualization only works for 2 variables.")
 
     except Exception as e:
         st.error(f"❌ Error: {e}")

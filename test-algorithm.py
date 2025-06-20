@@ -7,7 +7,7 @@ class TestSimplex(unittest.TestCase):
         c = np.array([3, 2])
         A = np.array([[2, 1], [1, 2]])
         b = np.array([18, 14])
-        solution, _ = simplex(c, A, b)
+        solution, _, _ = simplex(c, A, b)  # 3 değişkeni de karşıla
         self.assertTrue(np.allclose(solution, [5.2, 4.4], atol=1e-1))
 
 if __name__ == '__main__':

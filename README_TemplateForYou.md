@@ -52,11 +52,11 @@ This project is an interactive web application that implements and visualizes [L
 - [Interactive input of objective function and constraints]
 - [Step-by-step visualization of the Simplex Tableau]
 - [Displays optimal solution and maximum value]
-...
+
 
 ## Screenshots
 
-![Main Interface](docs/screenshots/main_interface.png)
+![Main Interface](https://github.com/itahapinar/algorithms-and-programming-ii-semester-capstone-project-itahapinar/issues/1)
 *Caption describing the main interface*
 
 ![Algorithm in Action](docs/screenshots/algorithm_demo.png)

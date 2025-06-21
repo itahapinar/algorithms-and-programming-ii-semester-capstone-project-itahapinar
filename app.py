@@ -2,62 +2,44 @@ import streamlit as st
 import numpy as np
 import matplotlib.pyplot as plt
 from algorithm import simplex
-from utils import display_tableau
+from utils import plot_feasible_region, generate_tableau
 
-st.set_page_config(page_title="Simplex Method App", layout="centered")
+st.set_page_config(page_title="Linear Programming - Simplex Method", layout="wide")
 
-st.title("📊 Linear Programming: Simplex Method")
-st.markdown("Follow the steps below to solve your LP problem using Simplex.")
+st.title("🔢 Linear Programming - Simplex Method (Interactive)")
+st.markdown("""
+This application solves **linear programming problems** using the Simplex Method.
 
-# Step 2 - Objective function
-st.header("Step 2: Enter Objective Function")
-c_input = st.text_input("Enter objective function coefficients (e.g. 3,2):", "3,2")
+✅ Enter the number of variables and constraints  
+✅ Define objective function and constraints  
+✅ Watch the algorithm step through the solution  
+""")
 
-# Step 3 - Constraints
-st.header("Step 3: Enter Constraints")
-A_input = st.text_area("Enter constraints (each row as comma-separated values):", "1,2\n4,0\n0,4")
-b_input = st.text_input("Enter right-hand side values:", "8,16,12")
+st.subheader("Step 2: Enter Objective Function (Maximize)")
+c1 = st.number_input("Coefficient of x1", value=-3.0, step=0.5)
+c2 = st.number_input("Coefficient of x2", value=-2.0, step=0.5)
 
-if st.button("Solve LP Problem"):
-    try:
-        c = np.array([float(x) for x in c_input.split(",")])
-        A = np.array([[float(val) for val in row.split(",")] for row in A_input.strip().split("\n")])
-        b = np.array([float(x) for x in b_input.split(",")])
+st.subheader("Step 3: Enter Constraints (Ax ≤ b)")
+a11 = st.number_input("a11", value=1.0)
+a12 = st.number_input("a12", value=1.0)
+b1 = st.number_input("b1", value=4.0)
 
-        final_tableau, basis, steps = simplex(c, A, b)
-        solution = np.zeros(len(c))
-        for i, col in enumerate(basis):
-            if col < len(c):
-                solution[col] = final_tableau[i, -1]
+a21 = st.number_input("a21", value=2.0)
+a22 = st.number_input("a22", value=1.0)
+b2 = st.number_input("b2", value=5.0)
 
-        st.success("✅ Optimal solution found!")
-        st.markdown(f"**Max Z = {final_tableau[-1, -1]:.2f}**")
-        st.markdown("### Variable Values:")
-        for i, val in enumerate(solution):
-            st.write(f"x{i+1} = {val:.2f}")
-
-        # Final Tableau
-        display_tableau(final_tableau, "Final Tableau")
-
-        # Visualization (Simple 2D feasible region + optimal point)
-        if len(c) == 2:
-            x_vals = np.linspace(0, max(b)*1.2, 400)
-            fig, ax = plt.subplots()
-            for i in range(A.shape[0]):
-                if A[i,1] != 0:
-                    ax.plot(x_vals, (b[i] - A[i,0]*x_vals) / A[i,1], label=f"Constraint {i+1}")
-                else:
-                    ax.axvline(x=b[i]/A[i,0], label=f"Constraint {i+1}")
-
-            ax.plot(solution[0], solution[1], "ro", label="Optimal Point")
-            ax.set_xlim(left=0)
-            ax.set_ylim(bottom=0)
-            ax.set_xlabel("x₁")
-            ax.set_ylabel("x₂")
-            ax.legend()
-            ax.set_title("Feasible Region and Optimal Solution")
-            st.pyplot(fig)
-        else:
-            st.info("Graphical visualization is only supported for 2-variable problems.")
-    except Exception as e:
-        st.error(f"An error occurred: {e}")
+if st.button("🔍 Solve Linear Program"):
+    A = np.array([[a11, a12], [a21, a22]])
+    b = np.array([b1, b2])
+    c = np.array([c1, c2])
+    
+    x, max_val, tableau = simplex(A, b, c)
+    
+    st.success(f"✅ Optimal solution found: x = {x.tolist()}, Max Value = {max_val:.2f}")
+    
+    st.subheader("Simplex Tableau")
+    st.dataframe(generate_tableau(tableau))
+    
+    st.subheader("Feasible Region")
+    fig = plot_feasible_region(A, b)
+    st.pyplot(fig)

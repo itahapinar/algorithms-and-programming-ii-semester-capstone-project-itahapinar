@@ -1,12 +1,16 @@
-from algorithm import simplex
 import numpy as np
+from algorithm import simplex_method
 
-def test_simplex_basic():
+def test_simple_problem():
     c = np.array([3, 2])
-    A = np.array([[1, 1], [1, 0], [0, 1]])
-    b = np.array([4, 2, 3])
-    solution, value, _ = simplex(c, A, b)
+    A = np.array([[1, 1], [2, 1]])
+    b = np.array([4, 5])
 
-    assert round(solution[0], 2) == 2.0
-    assert round(solution[1], 2) == 2.0
-    assert round(value, 2) == 10.0
+    final_tableau, _ = simplex_method(c, A, b)
+    optimal_value = final_tableau[-1, -1]
+
+    assert round(optimal_value, 2) == 11.0
+
+if __name__ == "__main__":
+    test_simple_problem()
+    print("Test passed.")

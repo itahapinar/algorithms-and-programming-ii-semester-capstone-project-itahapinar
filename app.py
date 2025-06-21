@@ -1,40 +1,29 @@
 import streamlit as st
 import numpy as np
-from algorithm import simplex
-from utils import plot_feasible_region
+from algorithm import simplex_method
+from utils import plot_solution_space
 
-st.set_page_config(page_title="Simplex Solver", layout="centered")
-st.title("🔺 Simplex Method Visualizer")
+st.title("Linear Programming - Simplex Method Visualizer")
 
-st.sidebar.header("Enter Problem Parameters")
+# Örnek problem:
+# Maximize: z = 3x + 2y
+# Subject to:
+#   x + y ≤ 4
+#   2x + y ≤ 5
+#   x, y ≥ 0
 
-c1 = st.sidebar.number_input("Objective: Coefficient of x", value=3.0)
-c2 = st.sidebar.number_input("Objective: Coefficient of y", value=2.0)
+c = np.array([3, 2])
+A = np.array([[1, 1], [2, 1]])
+b = np.array([4, 5])
 
-A = np.array([
-    [st.sidebar.number_input("a11", value=1.0), st.sidebar.number_input("a12", value=1.0)],
-    [st.sidebar.number_input("a21", value=1.0), st.sidebar.number_input("a22", value=0.0)],
-    [st.sidebar.number_input("a31", value=0.0), st.sidebar.number_input("a32", value=1.0)]
-])
-b = np.array([
-    st.sidebar.number_input("b1", value=4.0),
-    st.sidebar.number_input("b2", value=2.0),
-    st.sidebar.number_input("b3", value=3.0)
-])
-c = np.array([c1, c2])
+st.subheader("Feasible Region")
+plot_solution_space(A, b)
 
-if st.button("Solve"):
-    solution, max_val, steps = simplex(c, A, b)
+st.subheader("Simplex Pivot Steps")
+final_tableau, steps = simplex_method(c, A, b)
 
-    st.subheader("✅ Solution")
-    st.write("Optimal solution (x, y):", solution)
-    st.write("Maximum value of objective function:", max_val)
+for i, step in enumerate(steps):
+    st.write(f"### Step {i}")
+    st.dataframe(step)
 
-    st.subheader("📊 Graphical Representation")
-    fig = plot_feasible_region(A, b, solution)
-    st.pyplot(fig)
-
-    st.subheader("📋 Pivot Steps")
-    for i, tableau in enumerate(steps):
-        st.markdown(f"**Step {i+1}**")
-        st.dataframe(np.round(tableau, 2))
+st.success(f"Optimal value: {final_tableau[-1, -1]}")

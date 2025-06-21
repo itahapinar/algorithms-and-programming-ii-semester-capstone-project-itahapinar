@@ -1,11 +1,20 @@
+import unittest
 import numpy as np
 from algorithm import simplex
 
-def test_simplex():
-    c = np.array([3, 2])
-    A = np.array([[1, 2], [4, 0], [0, 4]])
-    b = np.array([8, 16, 12])
-    result, basis, steps = simplex(c, A, b)
-    assert round(result[-1, -1], 2) == 36.0
+class TestSimplexMethod(unittest.TestCase):
 
-test_simplex()
+    def test_basic_case(self):
+        A = np.array([[1, 1], [2, 1]])
+        b = np.array([4, 5])
+        c = np.array([-3, -2])
+
+        x, max_val, _ = simplex(A, b, c)
+
+        # Check if the result is close to the known optimal solution
+        self.assertAlmostEqual(x[0], 1, places=2)
+        self.assertAlmostEqual(x[1], 3, places=2)
+        self.assertAlmostEqual(max_val, 9.0, places=2)
+
+if __name__ == '__main__':
+    unittest.main()

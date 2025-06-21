@@ -1,45 +1,40 @@
 import streamlit as st
 import numpy as np
 from algorithm import simplex
-from utils import display_tableau
+from utils import plot_feasible_region
 
-st.title("Simplex Method Solver")
+st.set_page_config(page_title="Simplex Solver", layout="centered")
+st.title("🔺 Simplex Method Visualizer")
 
-st.markdown("Enter your LP problem in standard form:")
+st.sidebar.header("Enter Problem Parameters")
 
-# Input fields
-c = st.text_input("Objective coefficients (e.g. 3,2):", "3,2")
-A = st.text_area("Constraint coefficients (each row separated by newline):", "1,2\n4,0\n0,4")
-b = st.text_input("Right-hand side values:", "8,16,12")
+c1 = st.sidebar.number_input("Objective: Coefficient of x", value=3.0)
+c2 = st.sidebar.number_input("Objective: Coefficient of y", value=2.0)
+
+A = np.array([
+    [st.sidebar.number_input("a11", value=1.0), st.sidebar.number_input("a12", value=1.0)],
+    [st.sidebar.number_input("a21", value=1.0), st.sidebar.number_input("a22", value=0.0)],
+    [st.sidebar.number_input("a31", value=0.0), st.sidebar.number_input("a32", value=1.0)]
+])
+b = np.array([
+    st.sidebar.number_input("b1", value=4.0),
+    st.sidebar.number_input("b2", value=2.0),
+    st.sidebar.number_input("b3", value=3.0)
+])
+c = np.array([c1, c2])
 
 if st.button("Solve"):
-    try:
-        # Parse inputs
-        c = np.array([float(x) for x in c.split(",")])
-        A = np.array([[float(num) for num in row.split(",")] for row in A.strip().split("\n")])
-        b = np.array([float(x) for x in b.split(",")])
+    solution, max_val, steps = simplex(c, A, b)
 
-        # Run simplex
-        final_tableau, basis, steps = simplex(c, A, b)
+    st.subheader("✅ Solution")
+    st.write("Optimal solution (x, y):", solution)
+    st.write("Maximum value of objective function:", max_val)
 
-        # Display steps
-        for i, step in enumerate(steps):
-            display_tableau(step, title=f"Step {i}")
+    st.subheader("📊 Graphical Representation")
+    fig = plot_feasible_region(A, b, solution)
+    st.pyplot(fig)
 
-        # Calculate variable values from basis
-        solution = np.zeros(len(c))
-        for i, var_index in enumerate(basis):
-            if var_index < len(c):
-                solution[var_index] = final_tableau[i, -1]
-
-        # Show variable values
-        st.markdown("### Variable Values:")
-        for i, val in enumerate(solution):
-            st.write(f"x{i+1} = {val:.2f}")
-
-        # Show optimal Z
-        z_value = -final_tableau[-1, -1]
-        st.success(f"✅ Optimal solution found. Max Z = {z_value:.2f}")
-        
-    except Exception as e:
-        st.error(f"Error: {e}")
+    st.subheader("📋 Pivot Steps")
+    for i, tableau in enumerate(steps):
+        st.markdown(f"**Step {i+1}**")
+        st.dataframe(np.round(tableau, 2))

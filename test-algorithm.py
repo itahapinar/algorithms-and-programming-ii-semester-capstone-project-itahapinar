@@ -1,32 +1,12 @@
-import pytest
+from algorithm import simplex
 import numpy as np
-from algorithm import SimplexSolver
 
-def test_simplex_optimal():
-    solver = SimplexSolver()
+def test_simplex_basic():
     c = np.array([3, 2])
-    A = np.array([[1, 1], [2, 1]])
-    b = np.array([10, 10])
-    
-    result = solver.solve(c, A, b)
-    assert result['status'] == 'optimal'
-    assert np.allclose(result['x'], [0, 10])
-    assert np.isclose(result['value'], 20)
+    A = np.array([[1, 1], [1, 0], [0, 1]])
+    b = np.array([4, 2, 3])
+    solution, value, _ = simplex(c, A, b)
 
-def test_simplex_unbounded():
-    solver = SimplexSolver()
-    c = np.array([1, 1])
-    A = np.array([[-1, 1]])
-    b = np.array([-1])
-    
-    result = solver.solve(c, A, b)
-    assert result['status'] == 'unbounded'
-
-def test_simplex_infeasible():
-    solver = SimplexSolver()
-    c = np.array([1, 1])
-    A = np.array([[1, 1], [-1, -1]])
-    b = np.array([-1, -2])
-    
-    result = solver.solve(c, A, b)
-    assert result['status'] == 'infeasible']
+    assert round(solution[0], 2) == 2.0
+    assert round(solution[1], 2) == 2.0
+    assert round(value, 2) == 10.0

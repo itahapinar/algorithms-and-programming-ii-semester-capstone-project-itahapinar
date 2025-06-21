@@ -49,9 +49,11 @@ This project is an interactive web application that implements and visualizes [L
 
 ## Features
 
-- [Interactive input of objective function and constraints]
-- [Step-by-step visualization of the Simplex Tableau]
-- [Displays optimal solution and maximum value]
+- [Interactive Input: Users can input the objective function and constraints in plain text.]
+- [Step-by-Step Execution: Displays the Simplex Tableau at each iteration.]
+- [Optimal Solution Display: Shows final values of decision variables and the optimal objective value.]
+- [Graphical Visualization: For 2-variable problems, the feasible region and optimal point are plotted.]
+- [Error Handling: Basic input validation and feedback.]
 
 
 ## Screenshots
@@ -105,26 +107,31 @@ This project is an interactive web application that implements and visualizes [L
 
 ## Usage Guide
 
-1. [Enter the objective function        coefficients.]
-2. [Enter constraints in matrix form Ax ≤ b.]
-3. [Click Solve Linear Program to       compute solution.]
-4. [Review the result and simplex tableau.]
+1. [Enter the objective function coefficients
+      Provide the coefficients of the function you want to maximize]
+2. [Enter the constraints in matrix form (A·x ≤ b)
+      Input the constraint coefficients (A) row by row, and the right-hand side values (b) in a separate field.]
+3. [Click "Solve" to compute the solution
+      The app will run the Simplex algorithm and compute the optimal solution step by step.]
+4. [Review the results and solution steps
+      Examine the optimal values, final objective value, and each iteration's Simplex tableau.
+      If your problem has two variables, the feasible region will be plotted automatically.]
 
 ### Example Inputs
 
 - [Objective Function:
-   Maximize Z = -3x₁ - 2x₂
+   Maximize Z = 3x₁ + 2x₂
 
    Constraints:
-   x₁ + x₂ ≤ 4  
-   2x₁ + x₂ ≤ 5  
-   x₁ ≥ 0  
-   x₂ ≥ 0
+   x₁ + 3x₂ ≤ 15  
+   x₁ + x₂ ≤ 7  
+   2x₁ + x₂ ≤ 12  
+   x₁,x₂ ≥ 0
 
    Output:
-   x₁ = 1  
-   x₂ = 3  
-   Max Z = -9]
+   x₁ = 5  
+   x₂ = 2  
+   Max Z = 19]
 
 - [Objective Function:
    Maximize Z = 5x₁ + 4x₂
@@ -133,36 +140,35 @@ This project is an interactive web application that implements and visualizes [L
    6x₁ + 4x₂ ≤ 24  
    x₁ + 2x₂ ≤ 6  
    –x₁ + x₂ ≤ 1  
-   x₁ ≥ 0  
-   x₂ ≥ 0
-
-   Output:
-   x₁ = 2  
-   x₂ = 2  
-   Max Z = 18]
-
-- [Objective Function:
-   Maximize Z = 2x₁ + 3x₂
-
-   Constraints:
-   x₁ + x₂ ≤ 4  
-   2x₁ + 3x₂ ≤ 9  
-   x₁ ≥ 0  
-   x₂ ≥ 0
+   x₁,x₂ ≥ 0
 
    Output:
    x₁ = 3  
-   x₂ = 1  
-   Max Z = 9]
+   x₂ = 1.5 
+   Max Z = 21]
+
+- [Objective Function:
+   Maximize Z = 3x₁ + 4x₂
+
+   Constraints:
+   -x₁ + 2x₂ ≤ 8  
+   1x₁ + 2x₂ ≤ 12  
+   2x₁ + 1x₂ ≤ 16 
+   x₁,x₂ ≥ 0
+
+   Output:
+   x₁ = 6.66666
+   x₂ = 2.66666
+   Max Z = 30.66666]
 
 ## Implementation Details
 
 ### Key Components
 
-- `algorithm.py`: Implements the simplex logic
-- `app.py`: Streamlit web app interface
-- `utils.py`: Helper methods for input parsing and formatting
-- `visualizer.py`: Simplex tableau and steps visualizer
+- `algorithm.py`: Implements the core Simplex algorithm logic, including tableau generation, pivot operations, and solution steps.
+- `app.py`: The main Streamlit web application that handles user input, triggers the algorithm, and displays results and visualizations.
+- `utils.py`: Contains helper functions for parsing user input (objective function and constraints) and formatting the simplex tableau.
+- `test_algorithm.py`: Includes unit tests to validate correctness of the algorithm under various input conditions.
 
 ### Code Highlights
 
@@ -170,17 +176,22 @@ This project is an interactive web application that implements and visualizes [L
 # Include a few key code snippets that demonstrate the most important parts of your implementation
 def pivot(tableau, pivot_row, pivot_col):
     """
-    Performs a pivot operation to update the tableau
+    Perform a pivot operation on the simplex tableau.
+    
+    - Divides the pivot row by the pivot element to make it 1.
+    - Eliminates other values in the pivot column to make them 0.
     """
     pivot_element = tableau[pivot_row][pivot_col]
     tableau[pivot_row] = [val / pivot_element for val in tableau[pivot_row]]
+
     for i in range(len(tableau)):
         if i != pivot_row:
             multiplier = tableau[i][pivot_col]
             tableau[i] = [
-                val - multiplier * tableau[pivot_row][j]
-                for j, val in enumerate(tableau[i])
+                tableau[i][j] - multiplier * tableau[pivot_row][j]
+                for j in range(len(tableau[i]))
             ]
+
 
 ```
 

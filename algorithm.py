@@ -7,10 +7,14 @@ def simplex(c, A, b):
     tableau = np.vstack([tableau, cost_row])
 
     steps = []  # Pivot adımlarını tut
-    while any(tableau[-1, :-1] < 0):
+    while any(tableau[-1, :-1] < -1e-10):
         pivot_col = np.argmin(tableau[-1, :-1])
-        ratios = tableau[:-1, -1] / tableau[:-1, pivot_col]
-        ratios[ratios < 0] = np.inf
+
+        pivot_col_vals = tableau[:-1, pivot_col]
+        ratios = np.full_like(pivot_col_vals, np.inf, dtype=float)
+        positive_mask = pivot_col_vals > 1e-10
+        ratios[positive_mask] = tableau[:-1, -1][positive_mask] / pivot_col_vals[positive_mask]
+
         pivot_row = np.argmin(ratios)
         pivot = tableau[pivot_row, pivot_col]
         tableau[pivot_row] /= pivot
@@ -29,3 +33,4 @@ def simplex(c, A, b):
             solution[i] = tableau[row, -1]
 
     return solution, -tableau[-1, -1], steps
+

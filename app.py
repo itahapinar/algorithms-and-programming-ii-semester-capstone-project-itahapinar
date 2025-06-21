@@ -38,7 +38,7 @@ if st.button("Solve"):
             st.write(f"x{i+1} = {val:.2f}")
 
         # Show optimal Z
-        z_value = final_tableau[-1, -1]
+        z_value = -final_tableau[-1, -1]
         st.success(f"✅ Optimal solution found. Max Z = {z_value:.2f}")
         
     except Exception as e:

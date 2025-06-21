@@ -1,113 +1,73 @@
 import numpy as np
+import pandas as pd
 
-class SimplexSolver:
-    def __init__(self):
-        self.max_iter = 1000  # Prevent infinite loops
+def simplex_method(c, A, b, max_iter=1000):
+    """
+    Implement the simplex method for linear programming problems in standard form:
+    Maximize c^T x subject to Ax <= b, x >= 0
     
-    def solve(self, c, A, b):
-        """
-        Solve the linear programming problem:
-        Maximize c^T x
-        Subject to Ax <= b, x >= 0
-        
-        Returns a dictionary with:
-        - 'status': 'optimal', 'unbounded', or 'infeasible'
-        - 'x': optimal solution (if status is 'optimal')
-        - 'value': optimal objective value
-        - 'steps': list of simplex tableau steps
-        """
-        # Convert to standard form
-        num_vars = len(c)
-        num_constraints = len(b)
-        
-        # Add slack variables
-        c_slack = np.zeros(num_constraints)
-        c = np.concatenate([c, c_slack])
-        
-        A_slack = np.eye(num_constraints)
-        A = np.hstack([A, A_slack])
-        
-        # Initial tableau
-        tableau = self._create_initial_tableau(c, A, b)
-        steps = [{'tableau': tableau.copy(), 'pivot_row': None, 'pivot_col': None}]
-        
-        # Simplex iterations
-        for _ in range(self.max_iter):
-            # Check if optimal
-            if np.all(tableau[0, :-1] <= 0):
-                break
-                
-            # Select entering variable (most positive coefficient)
-            entering_col = np.argmax(tableau[0, :-1])
-            
-            # Compute ratios (only positive denominators)
-            ratios = np.inf * np.ones(num_constraints)
-            mask = tableau[1:, entering_col] > 0
-            ratios[mask] = tableau[1:, -1][mask] / tableau[1:, entering_col][mask]
-            
-            # If all ratios are infinite, problem is unbounded
-            if np.all(ratios == np.inf):
-                return {'status': 'unbounded', 'steps': steps}
-                
-            # Select leaving variable (smallest positive ratio)
-            leaving_row = np.argmin(ratios) + 1  # +1 because row 0 is objective
-            
-            # Pivot
-            pivot_val = tableau[leaving_row, entering_col]
-            tableau[leaving_row, :] /= pivot_val
-            for i in range(tableau.shape[0]):
-                if i != leaving_row:
-                    tableau[i, :] -= tableau[i, entering_col] * tableau[leaving_row, :]
-            
-            # Record step
-            steps.append({
-                'tableau': tableau.copy(),
-                'pivot_row': leaving_row,
-                'pivot_col': entering_col
-            })
-        
-        # Extract solution
-        solution = np.zeros(num_vars + num_constraints)
-        basis_indices = []
-        
-        # Find basic variables
-        for col in range(num_vars + num_constraints):
-            col_vec = tableau[:, col]
-            if np.sum(col_vec == 1) == 1 and np.sum(col_vec != 0) == 1:
-                row = np.where(col_vec == 1)[0][0]
-                solution[col] = tableau[row, -1]
-                if col < num_vars:  # Only count original variables
-                    basis_indices.append(col)
-        
-        # Check for infeasibility
-        if np.any(solution[num_vars:num_vars+num_constraints] < 0):
-            return {'status': 'infeasible', 'steps': steps}
-        
-        return {
-            'status': 'optimal',
-            'x': solution[:num_vars],
-            'value': -tableau[0, -1],  # Negate because we converted to standard form
-            'c': c[:num_vars],
-            'A': A[:, :num_vars],
-            'b': b,
-            'steps': steps
-        }
+    Returns a dictionary with:
+    - 'status': 'optimal', 'unbounded', or 'infeasible'
+    - 'solution': optimal solution if found
+    - 'value': optimal value if found
+    - 'tableau': final simplex tableau (optional)
+    """
+    # Convert to standard form
+    m, n = A.shape
+    c = np.array(c).reshape(-1)
     
-    def _create_initial_tableau(self, c, A, b):
-        """
-        Create the initial simplex tableau in standard form.
-        """
-        num_vars = len(c)
-        num_constraints = len(b)
+    # Add slack variables
+    tableau = np.zeros((m+1, n+m+1))
+    tableau[:-1, :n] = A
+    tableau[:-1, n:n+m] = np.eye(m)
+    tableau[:-1, -1] = b
+    tableau[-1, :n] = -c
+    
+    # Basis keeps track of basic variables (slacks initially)
+    basis = list(range(n, n+m))
+    
+    # Keep track of steps for tableau display
+    tableaus = []
+    
+    for _ in range(max_iter):
+        # Check for optimality
+        if all(tableau[-1, :-1] >= -1e-8):
+            # Prepare results
+            solution = np.zeros(n + m)
+            solution[basis] = tableau[:-1, -1]
+            
+            result = {
+                'status': 'optimal',
+                'solution': solution[:n],
+                'value': tableau[-1, -1],
+                'tableau': pd.DataFrame(tableau, 
+                                      columns=[f"x{i+1}" for i in range(n)] + 
+                                              [f"s{i+1}" for i in range(m)] + 
+                                              ["RHS"])
+            }
+            return result
         
-        tableau = np.zeros((num_constraints + 1, num_vars + num_constraints + 1))
+        # Select entering variable (most negative reduced cost)
+        entering = np.argmin(tableau[-1, :-1])
         
-        # Objective row
-        tableau[0, :num_vars] = -c  # Negate because we're maximizing
+        # Check for unboundedness
+        if all(tableau[:-1, entering] <= 1e-8):
+            return {'status': 'unbounded'}
         
-        # Constraint rows
-        tableau[1:, :num_vars] = A[:, :num_vars]
-        tableau[1:, num_vars:num_vars+num_constraints] = np.eye(num_constraints)
-        tableau[1:, -1] = b
+        # Compute ratios for leaving variable
+        ratios = tableau[:-1, -1] / tableau[:-1, entering]
+        ratios[tableau[:-1, entering] <= 1e-8] = np.inf
+        leaving = np.argmin(ratios)
         
-        return tableau
+        # Pivot
+        pivot_val = tableau[leaving, entering]
+        tableau[leaving, :] /= pivot_val
+        
+        for i in range(m+1):
+            if i != leaving:
+                tableau[i, :] -= tableau[i, entering] * tableau[leaving, :]
+        
+        # Update basis
+        basis[leaving] = entering
+        
+    return {'status': 'infeasible'}

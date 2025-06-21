@@ -1,68 +1,44 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.patches import Polygon
+import matplotlib.patches as patches
 
-def plot_solution_space(c, A, b, solution):
-    """
-    Plot the feasible region and optimal solution for a 2D LP problem.
-    """
+def plot_solution_space(A, b, c, solution):
+    """Plot the feasible region and solution for 2D LP problems"""
     fig, ax = plt.subplots(figsize=(10, 8))
     
     # Plot constraints
-    x = np.linspace(0, max(10, solution[0]*1.5), 400)
-    for i in range(len(b)):
+    x = np.linspace(0, max(b)*1.5, 400)
+    
+    for i in range(A.shape[0]):
         a1, a2 = A[i]
+        rhs = b[i]
+        
         if a2 != 0:
-            y = (b[i] - a1 * x) / a2
-            y[x > b[i]/a1 if a1 > 0 else x < b[i]/a1 if a1 < 0 else False] = np.nan
-            ax.plot(x, y, label=f'{a1}x1 + {a2}x2 ≤ {b[i]}')
+            y = (rhs - a1 * x) / a2
+            mask = y >= 0
+            ax.plot(x[mask], y[mask], label=f'{a1:.1f}x1 + {a2:.1f}x2 ≤ {rhs:.1f}')
+            ax.fill_between(x[mask], 0, y[mask], alpha=0.1)
+        else:
+            # Vertical line
+            x_val = rhs / a1
+            ax.axvline(x=x_val, label=f'{a1:.1f}x1 ≤ {rhs:.1f}')
+            ax.fill_betweenx([0, max(b)*1.5], 0, x_val, alpha=0.1)
     
-    # Find feasible region vertices
-    vertices = []
-    for i in range(len(b)):
-        for j in range(i+1, len(b)):
-            a = A[[i, j]]
-            b_vec = b[[i, j]]
-            try:
-                vertex = np.linalg.solve(a, b_vec)
-                if np.all(A @ vertex <= b + 1e-8) and np.all(vertex >= -1e-8):
-                    vertices.append(vertex)
-            except np.linalg.LinAlgError:
-                continue
+    # Plot objective function
+    if solution is not None:
+        opt_x, opt_y = solution
+        ax.plot(opt_x, opt_y, 'ro', markersize=10, label='Optimal Solution')
+        
+        # Objective function line
+        y_obj = (c[0] * x) / -c[1]  # For visualization
+        ax.plot(x, y_obj, '--', label=f'Objective: {c[0]:.1f}x1 + {c[1]:.1f}x2')
     
-    # Add axis intercepts
-    for i in range(len(b)):
-        if A[i, 0] != 0:
-            vertex = np.array([b[i]/A[i, 0], 0])
-            if np.all(A @ vertex <= b + 1e-8) and np.all(vertex >= -1e-8):
-                vertices.append(vertex)
-        if A[i, 1] != 0:
-            vertex = np.array([0, b[i]/A[i, 1]])
-            if np.all(A @ vertex <= b + 1e-8) and np.all(vertex >= -1e-8):
-                vertices.append(vertex)
-    
-    # Plot feasible region
-    if vertices:
-        vertices = np.array(vertices)
-        hull = vertices[vertices[:, 0].argsort()]
-        feasible_poly = Polygon(hull, alpha=0.3, label='Feasible Region')
-        ax.add_patch(feasible_poly)
-    
-    # Plot optimal solution
-    ax.scatter(solution[0], solution[1], color='red', s=100, 
-               label=f'Optimal Solution ({solution[0]:.2f}, {solution[1]:.2f})')
-    
-    # Plot objective function line
-    if c[1] != 0:
-        y_obj = ( -c[0] * x) / c[1]
-        ax.plot(x, y_obj, '--', color='green', label='Objective Function')
-    
-    ax.set_xlim(0, max(10, solution[0]*1.2))
-    ax.set_ylim(0, max(10, solution[1]*1.2))
+    ax.set_xlim(0, max(b)*1.2)
+    ax.set_ylim(0, max(b)*1.2)
     ax.set_xlabel('x1')
     ax.set_ylabel('x2')
-    ax.set_title('Solution Space')
-    ax.grid(True)
     ax.legend()
+    ax.grid(True)
+    ax.set_title('Solution Space and Optimal Solution')
     
     return fig

@@ -1,13 +1,15 @@
 import numpy as np
 from scipy.optimize import linprog
+import numpy as np
+from scipy.optimize import linprog
 
 def simplex(A, b, c):
-    # Note: Since linprog minimizes, we multiply c by -1 to maximize.
-    res = linprog(c=-1 * c, A_ub=A, b_ub=b, method="highs")
+    # Negate c to convert maximization to minimization
+    res = linprog(c=-c, A_ub=A, b_ub=b, bounds=(0, None), method='highs')
 
     if res.success:
-        # Reverse the sign to get the max value (because we minimized -c)
-        max_value = np.dot(c, res.x)
-        return res.x, max_value, res
+        x = res.x
+        max_value = np.dot(c, x)  # NOT res.fun! Use original c here
+        return x, max_value, res
     else:
-        raise ValueError("Linear programming problem has no solution.")
+        raise ValueError("No feasible solution.")

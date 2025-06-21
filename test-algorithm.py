@@ -1,12 +1,14 @@
-from algorithm import simplex
 import numpy as np
+from algorithm import simplex
 
-def test_simplex_basic():
+def test_simple_case():
     c = np.array([3, 2])
-    A = np.array([[1, 1], [1, 0], [0, 1]])
-    b = np.array([4, 2, 3])
+    A = np.array([[1, 2], [4, 0], [0, 4]])
+    b = np.array([8, 16, 12])
     solution, value, _ = simplex(c, A, b)
+    assert np.allclose(solution, [4, 2])
+    assert np.isclose(value, 18)
 
-    assert round(solution[0], 2) == 2.0
-    assert round(solution[1], 2) == 2.0
-    assert round(value, 2) == 10.0
+if __name__ == "__main__":
+    test_simple_case()
+    print("Test passed.")

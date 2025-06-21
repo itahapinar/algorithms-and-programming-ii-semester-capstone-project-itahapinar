@@ -1,40 +1,33 @@
-
 import streamlit as st
 import numpy as np
-from scipy.optimize import linprog
+import pandas as pd
+from algorithm import simplex
+from utils import parse_input, tableau_to_dataframe
 
-st.set_page_config(page_title="Linear Programming Solver", layout="centered")
+st.title("Simplex Method Solver")
 
-st.markdown("## Step 2: Enter Objective Function (Maximize)")
-c1 = st.text_input("Coefficient of x1 in Objective Function", "2.00")
-c2 = st.text_input("Coefficient of x2 in Objective Function", "3.00")
+with st.form("simplex_input"):
+    c_str = st.text_area("Objective Function Coefficients (c)", "3 2")
+    A_str = st.text_area("Constraint Coefficients (A)", "1 2\n4 0\n0 4")
+    b_str = st.text_area("Right-hand side (b)", "8 16 12")
+    submitted = st.form_submit_button("Solve")
 
-st.markdown("## Step 3: Enter Constraints (Ax ≤ b)")
-a11 = st.text_input("a11", "1.00")
-a12 = st.text_input("a12", "1.00")
-b1 = st.text_input("b1", "4.00")
-
-a21 = st.text_input("a21", "2.00")
-a22 = st.text_input("a22", "3.00")
-b2 = st.text_input("b2", "9.00")
-
-if st.button("🔷 Solve Linear Program"):
+if submitted:
     try:
-        # Nokta-virgül düzeltmesi ve float dönüşümü
-        c = [-float(c1.replace(",", ".")), -float(c2.replace(",", "."))]
-        A = [
-            [float(a11.replace(",", ".")), float(a12.replace(",", "."))],
-            [float(a21.replace(",", ".")), float(a22.replace(",", "."))]
-        ]
-        b = [float(b1.replace(",", ".")), float(b2.replace(",", "."))]
+        c, A, b = parse_input(c_str, A_str, b_str)
+        c = np.array(c)
+        A = np.array(A)
+        b = np.array(b)
 
-        result = linprog(c, A_ub=A, b_ub=b, method='highs')
+        solution, optimal_value, steps = simplex(c, A, b)
 
-        if result.success:
-            x_vals = [round(v, 4) for v in result.x]
-            max_val = round(-result.fun, 4)
-            st.success(f"✅ Optimal solution found: x = {x_vals}, Max Value = {max_val}")
-        else:
-            st.error("❌ No feasible solution found.")
+        st.success(f"Optimal Solution: {solution}")
+        st.success(f"Optimal Value: {optimal_value}")
+
+        st.subheader("Simplex Tableau Steps")
+        for i, step in enumerate(steps):
+            st.markdown(f"**Step {i}:**")
+            df = tableau_to_dataframe(step)
+            st.dataframe(df)
     except Exception as e:
-        st.error(f"⚠️ Error in input or solving: {e}")
+        st.error(f"Error: {str(e)}")

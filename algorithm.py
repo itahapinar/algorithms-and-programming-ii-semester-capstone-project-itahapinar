@@ -1,24 +1,45 @@
+import numpy as np
 
-from scipy.optimize import linprog
+def simplex(c, A, b):
+    m, n = A.shape
+    tableau = np.zeros((m + 1, n + m + 1))
+    
+    tableau[:-1, :n] = A
+    tableau[:-1, n:n + m] = np.eye(m)
+    tableau[:-1, -1] = b
+    tableau[-1, :n] = -c
 
-def solve_linear_program(c1, c2, a11, a12, b1, a21, a22, b2):
-    try:
-        # Virgül yerine nokta kullanarak sayılara dönüştür
-        c = [-float(c1.replace(",", ".")), -float(c2.replace(",", "."))]
-        A = [
-            [float(a11.replace(",", ".")), float(a12.replace(",", "."))],
-            [float(a21.replace(",", ".")), float(a22.replace(",", "."))]
-        ]
-        b = [float(b1.replace(",", ".")), float(b2.replace(",", "."))]
+    basis = list(range(n, n + m))
+    
+    steps = [tableau.copy()]  # her adımı kaydet
+    while True:
+        pivot_col = np.argmin(tableau[-1, :-1])
+        if tableau[-1, pivot_col] >= 0:
+            break
 
-        # Simplex yerine modern çözüm: highs
-        result = linprog(c, A_ub=A, b_ub=b, method='highs')
+        ratios = []
+        for i in range(m):
+            if tableau[i, pivot_col] > 0:
+                ratios.append(tableau[i, -1] / tableau[i, pivot_col])
+            else:
+                ratios.append(np.inf)
 
-        if result.success:
-            x_vals = [round(v, 4) for v in result.x]
-            max_val = round(-result.fun, 4)
-            return True, x_vals, max_val
-        else:
-            return False, None, None
-    except Exception as e:
-        return False, str(e), None
+        pivot_row = np.argmin(ratios)
+        if ratios[pivot_row] == np.inf:
+            raise ValueError("Problem is unbounded.")
+
+        pivot_element = tableau[pivot_row, pivot_col]
+        tableau[pivot_row, :] /= pivot_element
+
+        for i in range(m + 1):
+            if i != pivot_row:
+                tableau[i, :] -= tableau[i, pivot_col] * tableau[pivot_row, :]
+
+        basis[pivot_row] = pivot_col
+        steps.append(tableau.copy())
+
+    solution = np.zeros(n + m)
+    for i in range(m):
+        solution[basis[i]] = tableau[i, -1]
+
+    return solution[:n], tableau[-1, -1], steps

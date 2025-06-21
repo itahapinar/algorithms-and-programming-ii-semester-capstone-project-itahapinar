@@ -1,40 +1,45 @@
 import streamlit as st
 import numpy as np
-from algorithm import simplex
-from utils import plot_feasible_region
+from algorithm import simplex_method  # kendi algoritma fonksiyonun burada olmalı
 
-st.set_page_config(page_title="Simplex Solver", layout="centered")
-st.title("🔺 Simplex Method Visualizer")
+st.title("Simplex Yöntemi Çözücü")
 
-st.sidebar.header("Enter Problem Parameters")
+# Kullanıcıdan veri alma
+st.subheader("Amaç Fonksiyonu (örnek: 3, 5):")
+objective_input = st.text_input("z = ", "3, 5")
 
-c1 = st.sidebar.number_input("Objective: Coefficient of x", value=3.0)
-c2 = st.sidebar.number_input("Objective: Coefficient of y", value=2.0)
+st.subheader("Kısıtlar (örnek: 1, 2, <=, 8):")
+num_constraints = st.number_input("Kaç adet kısıt girilecek?", min_value=1, step=1)
+constraints = []
 
-A = np.array([
-    [st.sidebar.number_input("a11", value=1.0), st.sidebar.number_input("a12", value=1.0)],
-    [st.sidebar.number_input("a21", value=1.0), st.sidebar.number_input("a22", value=0.0)],
-    [st.sidebar.number_input("a31", value=0.0), st.sidebar.number_input("a32", value=1.0)]
-])
-b = np.array([
-    st.sidebar.number_input("b1", value=4.0),
-    st.sidebar.number_input("b2", value=2.0),
-    st.sidebar.number_input("b3", value=3.0)
-])
-c = np.array([c1, c2])
+for i in range(num_constraints):
+    constraint = st.text_input(f"{i+1}. Kısıt (örnek: 1, 2, <=, 8)", "")
+    constraints.append(constraint)
 
-if st.button("Solve"):
-    solution, max_val, steps = simplex(c, A, b)
+# Butona basılınca işlem yapılır
+if st.button("Çözümle"):
+    try:
+        # Amaç fonksiyonu ayrıştırılır
+        c = np.array([float(x) for x in objective_input.split(",")])
+        
+        A = []
+        b = []
+        signs = []
 
-    st.subheader("✅ Solution")
-    st.write("Optimal solution (x, y):", solution)
-    st.write("Maximum value of objective function:", max_val)
+        for cons in constraints:
+            parts = cons.split(",")
+            A.append([float(x) for x in parts[:-2]])
+            signs.append(parts[-2].strip())
+            b.append(float(parts[-1]))
 
-    st.subheader("📊 Graphical Representation")
-    fig = plot_feasible_region(A, b, solution)
-    st.pyplot(fig)
+        A = np.array(A)
+        b = np.array(b)
 
-    st.subheader("📋 Pivot Steps")
-    for i, tableau in enumerate(steps):
-        st.markdown(f"**Step {i+1}**")
-        st.dataframe(np.round(tableau, 2))
+        # Simplex fonksiyonunu çağır
+        result = simplex_method(c, A, b, signs)  # kendi fonksiyonuna göre ayarla
+
+        st.success("Çözüm:")
+        st.write(result)
+
+    except Exception as e:
+        st.error(f"Hata: {e}")

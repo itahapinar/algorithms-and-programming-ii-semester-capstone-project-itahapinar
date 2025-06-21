@@ -1,45 +1,40 @@
+
 import streamlit as st
 import numpy as np
-from algorithm import simplex_method  # kendi algoritma fonksiyonun burada olmalı
+from scipy.optimize import linprog
 
-st.title("Simplex Yöntemi Çözücü")
+st.set_page_config(page_title="Linear Programming Solver", layout="centered")
 
-# Kullanıcıdan veri alma
-st.subheader("Amaç Fonksiyonu (örnek: 3, 5):")
-objective_input = st.text_input("z = ", "3, 5")
+st.markdown("## Step 2: Enter Objective Function (Maximize)")
+c1 = st.text_input("Coefficient of x1 in Objective Function", "2.00")
+c2 = st.text_input("Coefficient of x2 in Objective Function", "3.00")
 
-st.subheader("Kısıtlar (örnek: 1, 2, <=, 8):")
-num_constraints = st.number_input("Kaç adet kısıt girilecek?", min_value=1, step=1)
-constraints = []
+st.markdown("## Step 3: Enter Constraints (Ax ≤ b)")
+a11 = st.text_input("a11", "1.00")
+a12 = st.text_input("a12", "1.00")
+b1 = st.text_input("b1", "4.00")
 
-for i in range(num_constraints):
-    constraint = st.text_input(f"{i+1}. Kısıt (örnek: 1, 2, <=, 8)", "")
-    constraints.append(constraint)
+a21 = st.text_input("a21", "2.00")
+a22 = st.text_input("a22", "3.00")
+b2 = st.text_input("b2", "9.00")
 
-# Butona basılınca işlem yapılır
-if st.button("Çözümle"):
+if st.button("🔷 Solve Linear Program"):
     try:
-        # Amaç fonksiyonu ayrıştırılır
-        c = np.array([float(x) for x in objective_input.split(",")])
-        
-        A = []
-        b = []
-        signs = []
+        # Nokta-virgül düzeltmesi ve float dönüşümü
+        c = [-float(c1.replace(",", ".")), -float(c2.replace(",", "."))]
+        A = [
+            [float(a11.replace(",", ".")), float(a12.replace(",", "."))],
+            [float(a21.replace(",", ".")), float(a22.replace(",", "."))]
+        ]
+        b = [float(b1.replace(",", ".")), float(b2.replace(",", "."))]
 
-        for cons in constraints:
-            parts = cons.split(",")
-            A.append([float(x) for x in parts[:-2]])
-            signs.append(parts[-2].strip())
-            b.append(float(parts[-1]))
+        result = linprog(c, A_ub=A, b_ub=b, method='highs')
 
-        A = np.array(A)
-        b = np.array(b)
-
-        # Simplex fonksiyonunu çağır
-        result = simplex_method(c, A, b, signs)  # kendi fonksiyonuna göre ayarla
-
-        st.success("Çözüm:")
-        st.write(result)
-
+        if result.success:
+            x_vals = [round(v, 4) for v in result.x]
+            max_val = round(-result.fun, 4)
+            st.success(f"✅ Optimal solution found: x = {x_vals}, Max Value = {max_val}")
+        else:
+            st.error("❌ No feasible solution found.")
     except Exception as e:
-        st.error(f"Hata: {e}")
+        st.error(f"⚠️ Error in input or solving: {e}")

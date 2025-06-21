@@ -4,8 +4,8 @@ def simplex(c, A, b):
     cost_row = np.hstack([-c, np.zeros(m + 1)])
     tableau = np.vstack([tableau, cost_row])
 
-    steps = []  # Pivot adımlarını tut
-    while any(tableau[-1, :-1] < 0):
+    steps = []
+    while any(tableau[-1, :-1] < -1e-10):
         pivot_col = np.argmin(tableau[-1, :-1])
 
         pivot_col_values = tableau[:-1, pivot_col]

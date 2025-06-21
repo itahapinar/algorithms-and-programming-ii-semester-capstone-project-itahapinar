@@ -2,52 +2,54 @@ import numpy as np
 
 def create_initial_tableau(A, b, c):
     m, n = A.shape
-    tableau = np.zeros((m + 1, n + m + 1))
-    tableau[:-1, :n] = A
-    tableau[:-1, n:n + m] = np.eye(m)
-    tableau[:-1, -1] = b
-    tableau[-1, :n] = -c
-    return tableau
+    T = np.zeros((m+1, n+m+1))
+    T[:m, :n] = A
+    T[:m, n:n+m] = np.eye(m)
+    T[:m, -1] = b
+    T[m, :n] = -c
+    return T
 
-def get_pivot_position(tableau):
-    col = np.argmin(tableau[-1, :-1])
-    if tableau[:-1, col].max() <= 0:
-        return None  # Unbounded
-    row_ratios = tableau[:-1, -1] / tableau[:-1, col]
-    row_ratios[tableau[:-1, col] <= 0] = np.inf
-    row = np.argmin(row_ratios)
-    return row, col
+def get_pivot_position(T):
+    # 1) Entering variable (most negative in objective row)
+    last = T[-1, :-1]
+    if np.all(last >= 0):
+        return None  # optimal
+    j = np.argmin(last)
 
-def pivot_step(tableau, row, col):
-    tableau[row] /= tableau[row, col]
-    for r in range(len(tableau)):
-        if r != row:
-            tableau[r] -= tableau[r, col] * tableau[row]
-    return tableau
+    # 2) Leaving variable (min positive ratio)
+    col = T[:-1, j]
+    rhs = T[:-1, -1]
+    ratios = np.where(col > 0, rhs / col, np.inf)
+    if np.all(ratios == np.inf):
+        raise ValueError("Unbounded LP")
+    i = np.argmin(ratios)
+    return i, j
+
+def pivot_step(T, i, j):
+    T[i, :] /= T[i, j]
+    for r in range(T.shape[0]):
+        if r != i:
+            T[r, :] -= T[r, j] * T[i, :]
+    return T
 
 def simplex_algorithm(A, b, c):
-    tableaus = []
-    tableau = create_initial_tableau(A, b, c)
-    tableaus.append(tableau.copy())
-
+    T = create_initial_tableau(A, b, c)
+    steps = [T.copy()]
     while True:
-        pos = get_pivot_position(tableau)
-        if pos is None:
-            break  # Optimal or unbounded
-        row, col = pos
-        tableau = pivot_step(tableau, row, col)
-        tableaus.append(tableau.copy())
+        p = get_pivot_position(T)
+        if p is None:
+            break
+        i, j = p
+        T = pivot_step(T, i, j)
+        steps.append(T.copy())
 
-        if (tableau[-1, :-1] >= 0).all():
-            break  # Optimal reached
-
-    solution = np.zeros_like(c)
+    # Extract solution
     m, n = A.shape
-    for i in range(n):
-        col = tableau[:-1, i]
-        if np.count_nonzero(col) == 1 and (col == 1).sum() == 1:
-            one_index = np.where(col == 1)[0][0]
-            solution[i] = tableau[one_index, -1]
-
-    max_value = tableau[-1, -1]
-    return solution, max_value, tableaus
+    x = np.zeros(n)
+    for var in range(n):
+        col = T[:m, var]
+        if np.count_nonzero(col) == 1 and (col == 1).any():
+            row = np.where(col == 1)[0][0]
+            x[var] = T[row, -1]
+    z = T[-1, -1]
+    return x, z, steps
